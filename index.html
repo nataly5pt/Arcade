@@ -7,29 +7,26 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="wrap">
-    <h1>Arcade 1</h1>
-    <p class="sub">Pick a game. All play happens in prompts/alerts.</p>
+  <main class="panel">
+    <h1>What would you like to play?</h1>
 
-    <div class="grid">
-      <!-- Function Declaration -->
-      <button onclick="playBNH()">Bear • Ninja • Hunter</button>
-
-      <!-- Function Expression -->
+    <div class="buttons">
+      <!-- Declaration -->
+      <button onclick="guessingGame()">Guessing Game</button>
+      <!-- Expression -->
       <button onclick="consultOracle()">Consult the Oracle</button>
-
-      <!-- Arrow Function -->
-      <button onclick="guessNumber()">Guess the Number</button>
+      <!-- Arrow -->
+      <button onclick="bnh()">Bear, Ninja, Hunter</button>
     </div>
 
-    <!-- Farewell UI appears only when the session ends -->
-    <div id="farewell" class="farewell" hidden>
+    <!-- Shown only when the player ends the overall Playing session -->
+    <section id="farewell" hidden>
       <p id="farewellMsg">Thanks for playing!</p>
-      <button onclick="location.reload()">Reload Arcade</button>
-    </div>
+      <button id="reload">Restart</button>
+    </section>
   </main>
 
-  <!-- Keep buttons in HTML; JS goes in script.js -->
   <script src="script.js" defer></script>
 </body>
 </html>
+
