@@ -3,176 +3,139 @@
    All variables instantiated at the top.
    =========================== */
 
-// Shared helpers & constants
-const YES = ["y", "yes"];
-const NO = ["n", "no"];
+/* ------------- Globals & helpers ------------- */
 
-// For BNH (arrays + randomizer required)
-const BNH_CHOICES = ["Bear", "Ninja", "Hunter"];
-const BNH_RULES = {
-  Bear: "Ninja",   // Bear beats Ninja
-  Ninja: "Hunter", // Ninja beats Hunter
-  Hunter: "Bear"   // Hunter beats Bear
-};
+// Simple YES test and UI handles for ending the Playing session
+const YES = /^y/i;
+const farewellBox = document.getElementById('farewell');
+const farewellMsg = document.getElementById('farewellMsg');
+const reloadBtn   = document.getElementById('reload');
 
-// Oracle responses (Magic Eight Ball vibe)
-const ORACLE = [
-  "It is certain.",
-  "Prospects are good.",
-  "Ask again later.",
-  "My sources say no.",
-  "The spirits are undecided.",
-  "Absolutely!",
-  "Doubtful.",
-  "A path opens if you are patient."
-];
+reloadBtn.addEventListener('click', () => location.reload());
 
-/* ===========================
-   Utility: prompt a yes/no, validate, and return Boolean.
-   Handles cancel/empty/invalid with messages.
-   =========================== */
-function askYesNo(message) {
-  while (true) {
-    const raw = prompt(message);
-    if (raw === null) {            // cancel
-      alert("Cancelled. We'll treat that as 'no'.");
-      return false;
-    }
-    const val = raw.trim().toLowerCase();
-    if (YES.includes(val)) return true;
-    if (NO.includes(val)) return false;
-    alert("Please type 'y' or 'n'.");
-  }
+// End the overall Playing session: show message + restart button
+function endPlayingSession(msg = 'Thanks for playing Arcade 1! See you next time.') {
+  farewellMsg.textContent = msg;
+  farewellBox.hidden = false;
+  reloadBtn.focus();
+  alert('Session ended. (You can restart from the page button.)');
 }
 
-/* ===========================
-   Utility: random array pick
-   =========================== */
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+// Normalize a y/n prompt into boolean
+function ynPrompt(message) {
+  const ans = prompt(message);
+  return ans && YES.test(ans) ? true : false; // <- uses a ternary as required
 }
 
-/* ===========================
-   Session gate shown AFTER a game’s internal loop
-   =========================== */
-function endOfGameAskAnother() {
-  const another = askYesNo("Would you like to pick another game to play?  y/n");
-  if (another) {
-    alert("Great! Click one of the buttons on the page to launch another game.");
-    return; // leave the UI as-is; player clicks a button next
-  }
-  // End the playing session: show farewell UI in HTML.
-  const box = document.getElementById("farewell");
-  const msg = document.getElementById("farewellMsg");
-  msg.textContent = "Thanks for visiting the Arcade. Come back soon!";
-  box.hidden = false;
-}
+// Random helpers
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
-/* =========================================================
-   GAME 1 — Bear • Ninja • Hunter
-   Function Declaration
-   ========================================================= */
-function playBNH() {
-  // One Playing loop consists of many “Single Game” rounds.
-  let playing = true;
+/* ------------- Game 1: Guessing Game (Declaration) ------------- */
+function guessingGame() {
+  let keepPlaying = true;
+  while (keepPlaying) {
+    const target = randInt(1, 10);
+    const input  = prompt('Guess a number between 1 and 10:');
 
-  while (playing) {
-    // --- Single Game (exactly one user choice vs random computer) ---
-    // Get user choice (validate)
-    let userInput = prompt("Type your choice: Bear, Ninja, or Hunter.");
-    if (userInput === null) {
-      alert("Cancelled. Ending this game.");
-      break;
-    }
-    userInput = userInput.trim().toLowerCase();
-    // allow short forms
-    if (userInput === "b") userInput = "bear";
-    if (userInput === "n") userInput = "ninja";
-    if (userInput === "h") userInput = "hunter";
-
-    if (!["bear", "ninja", "hunter"].includes(userInput)) {
-      alert("Invalid choice. Please type Bear, Ninja, or Hunter.");
-      continue; // re-run this single game
-    }
-
-    const player = userInput[0].toUpperCase() + userInput.slice(1); // capitalize
-    const computer = pickRandom(BNH_CHOICES);
-
-    // Determine result
-    let outcome;
-    if (player === computer) {
-      outcome = "Tie!";
-    } else if (BNH_RULES[player] === computer) {
-      outcome = `You win! ${player} defeats ${computer}.`;
+    if (input === null) {
+      alert('Game cancelled. (Tip: enter a number 1–10.)');
     } else {
-      outcome = `Computer wins! ${computer} defeats ${player}.`;
+      const guess = parseInt(input, 10);
+      if (Number.isNaN(guess) || guess < 1 || guess > 10) {
+        alert('Invalid input. Please enter an integer from 1 to 10.');
+      } else {
+        const diff = Math.abs(guess - target);
+        let msg = '';
+        if (diff === 0) {
+          msg = `Exact! It was ${target}. You win!`;
+        } else if (diff === 1) {
+          msg = `Close! It was ${target}. Computer wins this round.`;
+        } else {
+          msg = `Not this time. It was ${target}. Computer wins.`;
+        }
+        alert(msg);
+      }
     }
 
-    alert(
-      `You chose: ${player}\nComputer chose: ${computer}\n\n${outcome}`
-    );
-
-    // Ask if they want to keep playing THIS game
-    // (Use ternary operator to exit the loop)
-    playing = askYesNo("Would you like to keep playing this game? y/n") ? true : false;
+    // Single Game loop control
+    keepPlaying = ynPrompt('Would you like to keep playing this game? y/n');
   }
 
-  // Playing loop ended — ask about another game
-  endOfGameAskAnother();
+  // Playing session control (outside the game loop)
+  ynPrompt('Would you like to pick another game to play?  y/n')
+    ? null
+    : endPlayingSession('Goodbye from the Guessing Game. 👋');
 }
 
-/* =========================================================
-   GAME 2 — Consult the Oracle (Magic Eight Ball)
-   Function Expression
-   ========================================================= */
-const consultOracle = function () {
-  let playing = true;
+/* ------------- Game 2: Consult the Oracle (Expression) ------------- */
+const consultOracle = function() {
+  const replies = [
+    'It is certain.',
+    'Without a doubt.',
+    'Yes — definitely.',
+    'Most likely.',
+    'Signs point to yes.',
+    'Ask again later.',
+    'Better not tell you now.',
+    'Don’t count on it.',
+    'My sources say no.',
+    'Very doubtful.'
+  ];
+  const positiveIdx = new Set([0,1,2,3,4]); // define “wins” however you like
 
-  while (playing) {
-    let question = prompt("Ask the Oracle a yes/no question:");
-    if (question === null || question.trim() === "") {
-      alert("No question asked. Ending this game.");
-      break;
+  let keepPlaying = true;
+  while (keepPlaying) {
+    const q = prompt('Ask the Oracle a yes/no question (or Cancel to stop):');
+    if (q === null) {
+      alert('The Oracle fades into silence…');
+    } else if (!q.trim()) {
+      alert('Ask something with words! The Oracle dislikes emptiness.');
+    } else {
+      const reply = pick(replies);
+      const win = positiveIdx.has(replies.indexOf(reply));
+      alert(`You asked: "${q}"\nOracle says: "${reply}"\n${win ? 'You win the favor of fate!' : 'Alas… fortune turns away.'}`);
     }
-    const answer = pickRandom(ORACLE);
-    alert(`You asked:\n"${question.trim()}"\n\nThe Oracle says:\n${answer}`);
-
-    playing = askYesNo("Would you like to keep playing this game? y/n") ? true : false;
+    keepPlaying = ynPrompt('Would you like to keep playing this game? y/n');
   }
 
-  endOfGameAskAnother();
+  ynPrompt('Would you like to pick another game to play?  y/n')
+    ? null
+    : endPlayingSession('The Oracle returns to the mist. Farewell! 🔮');
 };
 
-/* =========================================================
-   GAME 3 — Guess the Number (1–10)
-   Arrow Function
-   Single guess per round = one “Single Game”
-   ========================================================= */
-const guessNumber = () => {
-  let playing = true;
+/* ------------- Game 3: Bear • Ninja • Hunter (Arrow) ------------- */
+const bnh = () => {
+  const CHOICES = ['Bear', 'Ninja', 'Hunter'];
+  const BEATS = { Bear: 'Ninja', Ninja: 'Hunter', Hunter: 'Bear' };
 
-  while (playing) {
-    const secret = Math.floor(Math.random() * 10) + 1;
+  const normalize = (s) => (s || '').trim().toLowerCase();
+  const titleCase = (s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 
-    let guessRaw = prompt("Guess the number (1–10):");
-    if (guessRaw === null) {
-      alert("Cancelled. Ending this game.");
-      break;
+  let keepPlaying = true;
+  while (keepPlaying) {
+    const raw = prompt('Type your choice: Bear, Ninja, or Hunter:');
+    if (raw === null) {
+      alert('Cancelled. (Type Bear, Ninja, or Hunter next time.)');
+    } else {
+      const n = normalize(raw);
+      const valid = { bear: 'Bear', ninja: 'Ninja', hunter: 'Hunter' }[n];
+      if (!valid) {
+        alert('Invalid choice. Please enter Bear, Ninja, or Hunter.');
+      } else {
+        const player = valid;
+        const computer = pick(CHOICES);
+        let outcome = '';
+        if (player === computer) outcome = "It's a tie.";
+        else if (BEATS[player] === computer) outcome = 'You win!';
+        else outcome = 'Computer wins.';
+        alert(`You chose: ${player}\nComputer chose: ${computer}\n${outcome}`);
+      }
     }
-    const guess = Number(guessRaw.trim());
-
-    if (!Number.isInteger(guess) || guess < 1 || guess > 10) {
-      alert("Please enter a whole number from 1 to 10.");
-      continue; // invalid -> redo single game
-    }
-
-    let result = (guess === secret)
-      ? `Correct! The number was ${secret}.`
-      : `Nope. You guessed ${guess}, but the number was ${secret}.`;
-    alert(result);
-
-    playing = askYesNo("Would you like to keep playing this game? y/n") ? true : false;
+    keepPlaying = ynPrompt('Would you like to keep playing this game? y/n');
   }
 
-  endOfGameAskAnother();
+  ynPrompt('Would you like to pick another game to play?  y/n')
+    ? null
+    : endPlayingSession('Hunt well, traveler. 🐻🥷🏹');
 };
