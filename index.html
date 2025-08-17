@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arcade 1</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>Arcade 1</h1>
+    <p class="sub">Pick a game. All play happens in prompts/alerts.</p>
+
+    <div class="grid">
+      <!-- Function Declaration -->
+      <button onclick="playBNH()">Bear • Ninja • Hunter</button>
+
+      <!-- Function Expression -->
+      <button onclick="consultOracle()">Consult the Oracle</button>
+
+      <!-- Arrow Function -->
+      <button onclick="guessNumber()">Guess the Number</button>
+    </div>
+
+    <!-- Farewell UI appears only when the session ends -->
+    <div id="farewell" class="farewell" hidden>
+      <p id="farewellMsg">Thanks for playing!</p>
+      <button onclick="location.reload()">Reload Arcade</button>
+    </div>
+  </main>
+
+  <!-- Keep buttons in HTML; JS goes in script.js -->
+  <script src="script.js" defer></script>
+</body>
+</html>
